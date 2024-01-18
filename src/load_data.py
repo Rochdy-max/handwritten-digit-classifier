@@ -1,78 +1,129 @@
 import gzip
 import torch
-from torch.nn.functional import one_hot
-from torch.utils.data import Dataset
-from torchvision.transforms import ToTensor
+from torch.utils.data import Dataset, DataLoader
+from torchvision.transforms import Lambda
 import matplotlib.pyplot as plt
 import struct
 
-images_transform = ToTensor
-labels_transform = one_hot
-
 def visualize_sample(images: torch.Tensor, labels: torch.Tensor, rows: int, cols: int):
+    # Create pyplot figure
     figure = plt.figure(figsize=(rows * 2, cols * 2))
     for i in range(1, rows * cols + 1):
+        # Prepare data to display
         sample_idx = torch.randint(len(images), size=(1,)).item()
         img = images[sample_idx].squeeze()
-        label = labels[sample_idx].item()
+        label = labels[sample_idx].argmax().item()
         img_title = f'Written digit : {label}'
+        # Draw image and its label
         figure.add_subplot(rows, cols, i)
         plt.axis('off')
         plt.imshow(img, cmap=plt.cm.gray)
         plt.title(img_title)
+    # Display window
     plt.show()
 
-def read_images(path: str, num_items: int | None = None):
-    expected_magic = 2051
-    metadata_size = 16
-    with gzip.open(path, 'rb') as file:
-        magic, size, rows, cols = struct.unpack('>IIII', file.read(metadata_size))
-        print(magic, size, rows, cols)
-        if magic != expected_magic:
-            raise ValueError(f'Magic number mismatch, expected {expected_magic}, got {magic}')
-        data = torch.frombuffer(file.read(), dtype=torch.uint8)
+class HandwrittenDigitMNIST(Dataset):
+    def __init__(self, images_filepath: str, labels_filepath: str, transform = None, target_transform = None):
+        # Initialize fields from parameter values
+        self.images_filepath = images_filepath
+        self.labels_filepath = labels_filepath
+        self.transform = transform
+        self.target_transform = target_transform
 
-    if num_items and size > num_items:
-        size = num_items
+        # Read dataset size, image's number of rows and cols
+        with gzip.open(self.images_filepath, 'rb') as file:
+            expected_magic = 2051
+            images_file_metadata_size = 16
+            magic, size, rows, cols = struct.unpack('>IIII', file.read(images_file_metadata_size))
+            print(magic, size, rows, cols)
+            if magic != expected_magic:
+                raise ValueError(f'Magic number mismatch, expected {expected_magic}, got {magic}')
+        # Store these values
+        self.size = size
+        self.rows = rows
+        self.cols = cols
 
-    images = torch.zeros((size, rows, cols))
-    for i in range(size):
-        if i > size:
-            break
-        image = data[i * rows * cols:(i + 1) * rows * cols] / 255.0
-        images[i][:] = image.reshape(rows, cols)
-    return images
-
-def read_labels(path: str, num_items: int | None = None):
-    expected_magic = 2049
-    metadata_size = 8
-    with gzip.open(path, 'rb') as file:
-        magic, size = struct.unpack('>II', file.read(metadata_size))
-        print(magic, size)
-        if magic != expected_magic:
-            raise ValueError(f'Magic number mismatch, expected {expected_magic}, got {magic}')
-
-        if num_items and size > num_items:
-            size = num_items
-
-        data = torch.frombuffer(file.read(size), dtype=torch.uint8)
-    return data
-
-def load_handwritten_mnist_data():
-    num_train = 60_000
-    num_test = 10_000
-    training_images = read_images("data/train-images-idx3-ubyte.gz", num_train)
-    training_labels = read_labels("data/train-labels-idx1-ubyte.gz", num_train)
-    test_images = read_images("data/t10k-images-idx3-ubyte.gz", num_test)
-    test_labels = read_labels("data/t10k-labels-idx1-ubyte.gz", num_test)
+    def __len__(self):
+        # Size of dataset
+        return self.size
     
-    return (training_images, training_labels), (test_images, test_labels)
+    def __getitem__(self, index: int) -> (torch.Tensor, torch.Tensor):
+        # Raise IndexError if index is out of range
+        if index < 0 or index >= self.size:
+            raise IndexError(f'index ({index}) out of range')
+
+        # Read bytes of image and label at index
+        image = self.read_image(index)
+        label = self.read_label(index)
+
+        # Create tensor from image's bytes and transform it with specified transform
+        image = torch.frombuffer(image, dtype=torch.uint8)
+        if self.transform:
+            image = self.transform(image)
+
+        # Create tensor from label's byte and transform it with specified target_transform
+        label = torch.frombuffer(label, dtype=torch.uint8)
+        if self.target_transform:
+            label = self.target_transform(label)
+        return image, label
+
+    def read_image(self, index: int):
+        # Uncompress file
+        with gzip.open(self.images_filepath, 'rb') as file:
+            expected_magic = 2051 # Magic number in images file
+            metadata_size = 16 # Size of metadata in images file
+            magic, _, _, _ = struct.unpack('>IIII', file.read(metadata_size))
+            # Check magic number
+            if magic != expected_magic:
+                raise ValueError(f'Magic number mismatch, expected {expected_magic}, got {magic}')
+            # Set file's cursor to where image's bytes start
+            file.seek(index * self.rows * self.cols, whence=1)
+            # Read image's bytes
+            data = file.read(self.rows * self.cols)
+        return data
+
+    def read_label(self, index: int):
+        # Uncompress file
+        with gzip.open(self.labels_filepath, 'rb') as file:
+            expected_magic = 2049 # Magic number in labels file
+            metadata_size = 8 # Size of metadata in images file
+            magic, _ = struct.unpack('>II', file.read(metadata_size))
+            # Check magic number
+            if magic != expected_magic:
+                raise ValueError(f'Magic number mismatch, expected {expected_magic}, got {magic}')
+            # Set file's cursor to label's byte position
+            file.seek(index, whence=1)
+            # Read label value
+            data = file.read(1)
+        return data
 
 if __name__ == "__main__":
-    (t1, l1), (t2, l2) = load_handwritten_mnist_data()
+    # Initialize transforms
+    images_transform = Lambda(lambda image: image.reshape(28, 28).divide(255))
+    labels_transform = Lambda(lambda label: torch.zeros(10).put(label.type(torch.int64), torch.tensor(1.0)))
 
-    print(f"{len(t1) = }, {len(l1) = }")
-    print(f"{len(t2) = }, {len(l2) = }")
+    # Set training and test files' paths
+    training_images_filepath = "data/train-images-idx3-ubyte.gz"
+    training_labels_filepath = "data/train-labels-idx1-ubyte.gz"
+    test_images_filepath = "data/t10k-images-idx3-ubyte.gz"
+    test_labels_filepath = "data/t10k-labels-idx1-ubyte.gz"
 
-    visualize_sample(t1, l1, 3, 3)
+    # Create training dataset
+    training_data = HandwrittenDigitMNIST(
+        training_images_filepath,
+        training_labels_filepath,
+        images_transform,
+        labels_transform)
+    # Create test dataset
+    test_data = HandwrittenDigitMNIST(
+        test_images_filepath,
+        test_labels_filepath,
+        images_transform,
+        labels_transform)
 
+    # Create a DataLoader wrapping training dataset
+    training_data_loader = DataLoader(training_data, batch_size=64, shuffle=True)
+    # Get a minibatch for data wrangling
+    (images, labels) = next(iter(training_data_loader))
+    # Visualize data in 3*3 grid
+    visualize_sample(images, labels, 3, 3)
