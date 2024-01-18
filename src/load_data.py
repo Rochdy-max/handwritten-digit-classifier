@@ -1,9 +1,9 @@
 import gzip
+import struct
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import Lambda
 import matplotlib.pyplot as plt
-import struct
 
 def visualize_sample(images: torch.Tensor, labels: torch.Tensor, rows: int, cols: int):
     # Create pyplot figure
