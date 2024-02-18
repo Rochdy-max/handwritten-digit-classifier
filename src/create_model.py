@@ -1,4 +1,5 @@
 import torch
+from torchinfo import summary
 from torchvision.transforms import Lambda
 from load_data import HandwrittenDigitMNIST
 from classifier import HandwrittenDigitClassifier
@@ -28,7 +29,10 @@ if __name__ == "__main__":
         labels_transform)
 
     # Create model
-    model = HandwrittenDigitClassifier(512, 512)
+    model = HandwrittenDigitClassifier()
+
+    # Model summary
+    summary(model, input_size=(1, 1, 28, 28))
     
     # Compile model
 
