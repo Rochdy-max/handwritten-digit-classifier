@@ -1,9 +1,26 @@
 import torch
+import matplotlib.pyplot as plt
 from torchinfo import summary
 from torch.utils.data import DataLoader
 from torchvision.transforms import Lambda
 from load_data import HandwrittenDigitMNIST
 from classifier import HandwrittenDigitClassifier
+
+def plot_training_hist(hist):
+    accuracy_keys = ['Train accuracy', 'Validation accuracy']
+    loss_keys = ['Train loss', 'Validation loss']
+    panels = ['Accuracy results', 'Loss results']
+    _, ax = plt.subplots(1, 2, figsize=(10, 6))
+
+    for key in accuracy_keys:
+        ax[0].plot(hist[key], label=key)
+        ax[0].set_title(panels[0])
+        ax[0].legend()
+    for key in loss_keys:
+        ax[1].plot(hist[key], label=key)
+        ax[1].set_title(panels[1])
+        ax[1].legend()
+    plt.show()
 
 if __name__ == "__main__":
     model_path = 'model/hwd_classifier.pth'
@@ -46,9 +63,11 @@ if __name__ == "__main__":
     optimizer = torch.optim.SGD(model.parameters(), learning_rate)
 
     # Fit model to training data
+    # res = {'Train accuracy': torch.randint(0, 10, (5,)), 'Validation accuracy': torch.randint(0, 10, (5,)), 'Train loss': torch.randint(0, 10, (5,)), 'Validation loss': torch.randint(0, 10, (5,))}
     res = model.fit(train_dataloader, test_dataloader, epochs, optimizer, loss_fn)
 
     # Plot training results
+    plot_training_hist(res)
 
     # Save model
     # torch.save(model.parameters(), model_path)
