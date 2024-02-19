@@ -49,7 +49,7 @@ class HandwrittenDigitClassifier(nn.Module):
         data_size = len(dataloader.dataset)
 
         for features, labels in dataloader:
-            labels = labels.view(len(labels))
+            labels = labels.flatten()
             # Prediction phase
             out = self(features)
             # Learning phase
@@ -70,7 +70,7 @@ class HandwrittenDigitClassifier(nn.Module):
 
         with torch.no_grad():
             for features, labels in dataloader:
-                labels = labels.view(len(labels))
+                labels = labels.flatten()
                 # Prediction phase
                 out = self(features)
                 # Update loss and accuracy
