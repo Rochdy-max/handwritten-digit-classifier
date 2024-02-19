@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     # Create train and test dataloader
     batch_size = 64
-    train_dataloader = DataLoader(training_data, batch_size)
+    train_dataloader = DataLoader(training_data, batch_size, shuffle=True)
     test_dataloader = DataLoader(test_data, batch_size)
 
     # Create model
