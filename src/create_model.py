@@ -70,5 +70,4 @@ if __name__ == "__main__":
     plot_training_hist(res)
 
     # Save model
-    # torch.save(model.parameters(), model_path)
-
+    torch.save(model.state_dict(), model_path)
