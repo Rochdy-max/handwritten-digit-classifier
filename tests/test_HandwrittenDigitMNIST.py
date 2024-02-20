@@ -1,4 +1,5 @@
 import os
+import torch
 from sys import path
 from torch.utils.data import DataLoader
 from torchvision.transforms import Lambda
@@ -63,7 +64,7 @@ class TestHandwrittenDigitMNIST:
         # Arrangement
         items_count = 10
         desired_shape = (1, 28, 28)
-        images_transform = Lambda(lambda image: image.reshape(desired_shape))
+        images_transform = Lambda(lambda image: image.reshape(desired_shape)) # transform 784 pixels tensor into a tensor of shape (1, 28, 28)
 
         # Action
         test_data = HandwrittenDigitMNIST(
@@ -74,4 +75,21 @@ class TestHandwrittenDigitMNIST:
         image, _ = test_data[0]
 
         # Assertion
-        assert image.shape == desired_shape        
+        assert image.shape == desired_shape
+
+    def test_labels_transform(self):
+        # Arrangement
+        items_count = 10
+        labels_transform = Lambda(lambda label: (label.item(), label.item()*2)) # transform label into a tuple containing (x, x*2)
+
+        # Action
+        test_data = HandwrittenDigitMNIST(
+            self.test_images_filepath,
+            self.test_labels_filepath,
+            items_count=items_count,
+            target_transform=labels_transform)
+        _, label = test_data[0]
+
+        # Assertion
+        assert isinstance(label, tuple)
+        assert label[0] * 2 == label[1]
