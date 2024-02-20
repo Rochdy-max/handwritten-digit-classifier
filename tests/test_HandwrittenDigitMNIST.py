@@ -1,5 +1,4 @@
 import os
-import torch
 from sys import path
 from torch.utils.data import DataLoader
 from torchvision.transforms import Lambda
