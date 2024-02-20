@@ -9,7 +9,7 @@ Some python packages are required to run this project:
 - matplotlib
 
 Those packages are already listed in [requirements.txt](https://github.com/Rochdy-max/handwritten-digit-classifier/blob/main/requirements.txt).
-So you just have to run `pip install -r requirements.txt` from applicatio's root directory to ensure they are correctly installed.
+So you just have to run `pip install -r requirements.txt` from application's root directory to ensure they are correctly installed.
 
 ## Usage
 Two modes of usage are available with this project.
