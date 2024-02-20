@@ -8,7 +8,7 @@ Some python packages are required to run this project:
 - torchvision
 - matplotlib
 
-Those packages are already listed in [requirements.txt](https://github.com/Rochdy-max/handwritten-digit-classifier/blob/requirements.txt).
+Those packages are already listed in [requirements.txt](https://github.com/Rochdy-max/handwritten-digit-classifier/blob/main/requirements.txt).
 So you just have to run `pip install -r requirements.txt` from applicatio's root directory to ensure they are correctly installed.
 
 ## Usage
