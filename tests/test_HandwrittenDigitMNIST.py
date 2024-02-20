@@ -1,16 +1,20 @@
+import os
 from sys import path
 
-src_path = 'src'
+# Insert source folder in path
+basepath = os.path.dirname(__file__)
+app_root = os.path.dirname(basepath)
+src_path = os.path.join(app_root, 'src')
 path.insert(0, src_path)
 
 from load_data import HandwrittenDigitMNIST
 
 class TestHandwrittenDigitMNIST:
     # Data files' paths
-    test_images_filepath = "data/t10k-images-idx3-ubyte.gz"
-    test_labels_filepath = "data/t10k-labels-idx1-ubyte.gz"
+    test_images_filepath = os.path.join(app_root, "data/t10k-images-idx3-ubyte.gz")
+    test_labels_filepath = os.path.join(app_root, "data/t10k-labels-idx1-ubyte.gz")
 
-    def test_dataset_size(self):
+    def tes_dataset_size(self):
         # Arrangement
         expected_size = 10000
 
