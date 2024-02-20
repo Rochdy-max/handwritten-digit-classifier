@@ -21,3 +21,16 @@ class TestHandwrittenDigitMNIST:
 
         # Assertion
         assert len(test_data) == expected_size
+
+    def test_limit_dataset_size(self):
+        # Arrangement
+        items_count = 10
+
+        # Action
+        test_data = HandwrittenDigitMNIST(
+            self.test_images_filepath,
+            self.test_labels_filepath,
+            items_count=items_count)
+
+        # Assertion
+        assert len(test_data) == items_count
