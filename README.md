@@ -14,8 +14,10 @@ Two modes of usage are available with this project.
 
 ### Model Creation
 To create a new model, you can simply run [classifier.py](https://github.com/Rochdy-max/handwritten-digit-classifier/blob/main/src/classifier.py).
+
 `python src/classifier.py`
 
 ### Model Prediction
 The script [predict.py](https://github.com/Rochdy-max/handwritten-digit-classifier/blob/main/src/predict.py) provides a demonstration of model prediction over test data loaded from *data* folder.
+
 `python src/predict.py`
