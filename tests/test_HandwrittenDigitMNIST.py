@@ -1,6 +1,7 @@
 import os
 from sys import path
 from torch.utils.data import DataLoader
+from torchvision.transforms import Lambda
 
 # Insert source folder in path
 basepath = os.path.dirname(__file__)
@@ -57,3 +58,20 @@ class TestHandwrittenDigitMNIST:
         # Assertion
         assert len(batch_features) == batch_size
         assert len(batch_labels) == batch_size
+
+    def test_features_transform(self):
+        # Arrangement
+        items_count = 10
+        desired_shape = (1, 28, 28)
+        images_transform = Lambda(lambda image: image.reshape(desired_shape))
+
+        # Action
+        test_data = HandwrittenDigitMNIST(
+            self.test_images_filepath,
+            self.test_labels_filepath,
+            items_count=items_count,
+            transform=images_transform)
+        image, _ = test_data[0]
+
+        # Assertion
+        assert image.shape == desired_shape        
